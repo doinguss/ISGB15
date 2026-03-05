@@ -8,7 +8,7 @@ function test(){
 } 
 let oGameData = {};
 oGameData.initGlobalObject = function() {
-    oGameData.gameField = Array('', '', '', '', '', '', '', '', '');
+    oGameData.gameField = new Array(9);
     oGameData.playerOne = "X";
     oGameData.playerTwo = "O";
     oGameData.currentPlayer = "";
@@ -27,9 +27,7 @@ oGameData.checkForGameOver = function() {
    if(oGameData.checkInProgress()){return 0;}
    return 3;
 }
-/*
- * here yander be thee wictorry checks yarr
- */ 
+/*here yander be thee wictorry checks yarr*/ 
 oGameData.checkRow = function(player) {
     for(let i=0;i<3;i++){/*3 cux 3 possible rows*/
         if(oGameData.gameField[3*i+0]!==player){continue;}
@@ -59,14 +57,8 @@ oGameData.checkInProgress=function(){
     oGameData.gameField.forEach(element => {if(element===""){out=true;}});
     return out;
 }
-/* 
- * and thus be the end of the wictory checking code yarrr
- */
+/*and thus be the end of the wictory checking code yarrr*/
 oGameData.fetch=function(){
-    // document.getElementById("game-area").childNodes.forEach(element=>{element.childNodes.forEach(element=>{element.childNodes.forEach(element=>{
-    //     if(element.nodeName!=="TD"){return;}
-    //     oGameData.gameField[Number(element.dataset.id)]=element.textContent;
-    // });});});
     document.querySelectorAll("td[data-id]").forEach(element=>{
         oGameData.gameField[Number(element.dataset.id)]=element.textContent;
     });
