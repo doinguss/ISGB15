@@ -1,13 +1,6 @@
 "use strict";
-function test(){
-    console.log( oGameData );
-    oGameData.initGlobalObject();
-    oGameData.fetch();
-    console.log( oGameData.gameField );
-    console.log( oGameData.checkForGameOver() );
-} 
 let oGameData = {};
-oGameData.initGlobalObject = function() {
+oGameData.initGlobalObject = ()=> {
     oGameData.gameField = new Array(9);
     oGameData.playerOne = "X";
     oGameData.playerTwo = "O";
@@ -19,7 +12,7 @@ oGameData.initGlobalObject = function() {
     oGameData.timerEnabled = false; 
     oGameData.timerId = null;
 }
-oGameData.checkForGameOver = function() {
+oGameData.checkForGameOver = ()=> {
    let players=[oGameData.playerOne,oGameData.playerTwo];
    for(let i=0;i<players.length;i++){
     if( oGameData.checkDiag(players[i])||oGameData.checkCol (players[i])||oGameData.checkRow (players[i])){return i+1;}
@@ -28,7 +21,7 @@ oGameData.checkForGameOver = function() {
    return 3;
 }
 /*here yander be thee wictorry checks yarr*/ 
-oGameData.checkRow = function(player) {
+oGameData.checkRow = (player)=> {
     for(let i=0;i<3;i++){/*3 cux 3 possible rows*/
         if(oGameData.gameField[3*i+0]!==player){continue;}
         if(oGameData.gameField[3*i+1]!==player){continue;}
@@ -36,7 +29,7 @@ oGameData.checkRow = function(player) {
         return true;}
     return false;
 }
-oGameData.checkCol = function(player) {
+oGameData.checkCol = (player)=> {
     for(let i=0;i<3;i++){/*3 cux 3 possible collumns*/
         if(oGameData.gameField[i+0+0]!==player){continue;}
         if(oGameData.gameField[i+3+0]!==player){continue;}
@@ -44,7 +37,7 @@ oGameData.checkCol = function(player) {
         return true;}
     return false;
 }
-oGameData.checkDiag = function(player) {
+oGameData.checkDiag = (player)=> {
     for(let i=0;i<2;i++){/*2 cux 2 possible diagonals*/
         if(oGameData.gameField[0+2*i]!==player){continue;}
         if(oGameData.gameField[4+0+0]!==player){continue;}
@@ -52,22 +45,21 @@ oGameData.checkDiag = function(player) {
         return true;}
     return false;
 }
-oGameData.checkInProgress=function(){
+oGameData.checkInProgress=()=>{
     let out=false;
     oGameData.gameField.forEach(element => {if(element===""){out=true;}});
     return out;
 }
 /*and thus be the end of the wictory checking code yarrr*/
-oGameData.fetch=function(){
+oGameData.fetch=()=>{
     document.querySelectorAll("td[data-id]").forEach(element=>{
         oGameData.gameField[Number(element.dataset.id)]=element.textContent;
     });
 }
-document.body.onload=function(){
+document.body.onload=()=>{
     oGameData.initGlobalObject();
-    oGameData.gameField=["","","","","","","","",""];
     document.querySelector('#game-area').classList.add("d-none");
-    document.querySelector('#newGame').addEventListener("click",oGameData.validateForm());
+    document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
     document.querySelector('#game-area').addEventListener("click",(event)=>{
         try{
             if(event.target.textContent!==""){throw {}}
@@ -76,8 +68,8 @@ document.body.onload=function(){
         }catch(oError){}
     });
 }
-oGameData.initiateGame=function(){
-    document.querySelector('form').classList.add("d-none");
+oGameData.initiateGame=()=>{
+    document.querySelector('form')      .classList.add("d-none");
     document.querySelector('#game-area').classList.remove("d-none");
     document.querySelector('#game-area').focus();
 
@@ -118,9 +110,11 @@ oGameData.validateForm=()=>{
             if(document.querySelector("#nick1") .value===document.querySelector("#nick2") .value){throw  {src: document.querySelector("#nick2") ,msg: 'wtf sama namn'}}
             if(document.querySelector("#color1").value===document.querySelector("#color2").value){throw  {src: document.querySelector("#color2"),msg: 'wtf same färg'}}
             oGameData.initiateGame();
+            return true;
         } catch(oError){
             document.querySelector("#errorMsg").textContent=oError.msg;
             oError.src.focus();
+            return false;
         }
 }
 oGameData.updatePlayer=()=>{
@@ -142,17 +136,26 @@ oGameData.playEvent=(target)=>{
     target.style.backgroundColor=(oGameData.currentPlayer==oGameData.playerOne)?oGameData.colorPlayerOne:oGameData.colorPlayerTwo;
     oGameData.fetch();
     switch(oGameData.checkForGameOver()){
-        case 0: oGameData.swapPlayer();  oGameData.updatePlayer();   return;
+        case 0: oGameData.swapPlayer();  oGameData.updatePlayer();
+        break;
         case 1: 
             document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerOne+" vann";
+
+            document.querySelector('form')      .classList.remove("d-none");
+            //document.querySelector('#game-area').classList.add("d-none");
             break;
         case 2:
             document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerTwo+" vann";
+
+            document.querySelector('form')      .classList.remove("d-none");
+            //document.querySelector('#game-area').classList.add("d-none");
             break;
         case 3:
+            document.querySelector(".jumbotron >h1").style.color="black";
             document.querySelector(".jumbotron >h1").textContent="oavgjort";
-            //document.querySelector("#game-area").removeEventListener("click",oGameData.validateForm());
+
+            document.querySelector('form')      .classList.remove("d-none");
+            //document.querySelector('#game-area').classList.add("d-none");            
             break;
     }
-    //document.querySelector("form").classList.remove("d-none");
 }
