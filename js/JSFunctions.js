@@ -1,8 +1,21 @@
 //import {mything} from 'algorythm.tictactoe2.mjs';
 //import {turn} from 'algorythm.tictactoe2.mjs';
 "use strict";
+
+
+//pre: body load
+//post: initlaizes ogamedata, hides gamearea
+//calls validateform, checkforgameover
+//catches does nothing
+document.body.onload=()=>{
+    oGameData.initGlobalObject();
+    document.querySelector('#game-area').classList.add("d-none");
+    document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
+}
+
+
 let oGameData = {};
-oGameData.initGlobalObject = ()=> {
+oGameData.initGlobalObject=()=>{
     oGameData.gameField = [["","",""],["","",""],["","",""]];
     oGameData.playerOne = "X";
     oGameData.playerTwo = "O";
@@ -15,12 +28,103 @@ oGameData.initGlobalObject = ()=> {
     oGameData.timerId = null;
     //oGameData.oppAi;
 }
+//pre: click newgame
+//post: initiaates game (conditional: passes checks)
+//calls initategame
+//checks name1/2 length > 5, color1/2 != white, color1/2 != black, color1 != color2
+//catches display error msg and focus on element
+oGameData.validateForm=()=>{
+        try{
+            if(document.querySelector("#nick1") .value.length<5){throw  {src: document.querySelector("#nick1"),msg: 'för kort, spelare 1'}}
+            if(document.querySelector("#nick2") .value.length<5){throw  {src: document.querySelector("#nick2"),msg: 'för kort, spelare 2'}}
+            if(document.querySelector("#color1").value==="#fff"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara vit, spelare 1'}}
+            if(document.querySelector("#color1").value==="#000"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara svart, spelare 1'}}
+            if(document.querySelector("#color2").value==="#fff"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara vit, spelare 2'}}
+            if(document.querySelector("#color2").value==="#000"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara svart, spelare 2'}}
+            if(document.querySelector("#nick1") .value===document.querySelector("#nick2") .value){throw  {src: document.querySelector("#nick2") ,msg: 'wtf sama namn'}}
+            if(document.querySelector("#color1").value===document.querySelector("#color2").value){throw  {src: document.querySelector("#color2"),msg: 'wtf same färg'}}
+            oGameData.initiateGame();
+            return true;
+        } catch(oError){
+            document.querySelector("#errorMsg").textContent=oError.msg;
+            oError.src.focus();
+            return false;
+        }
+}
+//pre: true
+//post:sets ogamedata feilds, hides form, shows gamearea, clearss board, sets player, sets edvent listner click on table
+//calls updateBoard, math.random, updateplayer, execute move
+//uses nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo, playerone, playertwo
+//migth adjust see adendum 1
+oGameData.initiateGame=()=>{
+    oGameData.initGlobalObject();
+    document.querySelector('form')      .classList.add("d-none");
+    document.querySelector('#game-area').classList.remove("d-none");
+    document.querySelector('#game-area').focus();
+
+    document.querySelector("#errorMsg").textContent="";
+    oGameData.nickNamePlayerOne=document.querySelector("#nick1").value;
+    oGameData.nickNamePlayerTwo=document.querySelector("#nick2").value;
+    oGameData.colorPlayerOne=  document.querySelector("#color1").value;
+    oGameData.colorPlayerTwo=  document.querySelector("#color2").value;
+
+    switch(Math.floor(Math.random()*2)){
+        case 0:
+            oGameData.currentPlayer=oGameData.playerOne;
+            break;
+            default: 
+            oGameData.currentPlayer=oGameData.playerTwo;
+            break;
+    }
+    oGameData.updatePlayer();
+    oGameData.updateBoard();
+    document.querySelector("table[class]").addEventListener("click",oGameData.clickTableEvent);
+    //oGameData.oppAi=new mything(playerTwo);
+}
+//pre: n/a
+//post: n/a
+//this function is used to add and remove th event listner from the table
+oGameData.clickTableEvent=(evt)=>{ //inspo with the "evt" syntax from here but i adjusted it a lot, main inspo was the no params in the func call and then one in this one https://stackoverflow.com/questions/256754/how-to-pass-arguments-to-addeventlistener-listener-function
+        try{
+            if(oGameData.gameField[Math.floor(Number(evt.target.dataset.id)*0.34)][Number(evt.target.dataset.id)%3]!==""){throw {}}
+            if(oGameData.checkForGameOver()!==0){throw {}}
+            oGameData.executeMove(evt.target);
+        }catch(oError){}
+}
+//pre: click on game board&& valid position&& checkforgameover()===0
+//post:writes to table cell, updates color of table cell, swaps player, uppdates gui, checks gamestate to determin outcome
+//calls updateBoard, checkforgameover, swapplayer, updateplayer, initglobalobject
+//uses currentplayer, playerone, colorplayerone, colorplayertwo, nicknameplayerone, nicknameplayertwo
+// if the game has ended by any means it hides the game area, shows the form, removes the eventlsitner on table and reinitalizes the ogamedata object
+//uppdated check adendum 1
+oGameData.executeMove=(target)=>{
+    let targetRow=Math.floor((Number(target.dataset.id))*(2.9/8));
+    let targetCol=(Number(target.dataset.id))%3;
+    oGameData.gameField[targetRow][targetCol]=oGameData.currentPlayer;
+    switch(oGameData.checkForGameOver()){
+        case 0: oGameData.swapPlayer();  oGameData.updatePlayer();  oGameData.updateBoard();// oGameData.oppAi.turn(oGameData.gameField);
+            return;
+        case 1: 
+            document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerOne+": vinnare, Spela igen?";
+            break;
+        case 2:
+            document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerTwo+": vinnare, Spela igen?";
+            break;
+        case 3:
+            document.querySelector(".jumbotron >h1").style.color="black";
+            document.querySelector(".jumbotron >h1").textContent="oavgjort";
+            break;
+    }// all below only execute if the game has ended
+    document.querySelector('form')      .classList.remove("d-none");
+    document.querySelector('#game-area').classList.add   ("d-none");
+    document.querySelector("table[class]").removeEventListener("click",oGameData.clickTableEvent);
+}
 //pre: true
 //post: int 0||1||2||3
 //represents board state 0: in progress, 1:player 1 wictory, 2:plaayer 2 wictory, 3: stalemate
 //calls on checkrow checkcol checkdiag and checkinprogress, uses playerone and playertwo
 //updated check adendum 1
-oGameData.checkForGameOver = ()=> {
+oGameData.checkForGameOver=()=>{
     let c=oGameData.playerOne;
     for(let i=0;i<2;i++){
         for(let j=0;j<3;j++){
@@ -46,8 +150,26 @@ oGameData.checkForGameOver = ()=> {
     }
     return 3;
 }
-/*and thus be the end of the wictory checking code yarrr*/
-
+//pre: true
+//post:swaps current player
+//uses currentplayer, playerone, playertwo
+oGameData.swapPlayer=()=>{
+    switch(oGameData.currentPlayer){
+        case oGameData.playerOne:   oGameData.currentPlayer=oGameData.playerTwo;    break;
+        case oGameData.playerTwo:   oGameData.currentPlayer=oGameData.playerOne;    break;
+    }
+}
+//pre: true
+//post:updates displayed player turn graphics
+//uses currentplayer, playerone, nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo
+oGameData.updatePlayer=()=>{
+    let playerChar, playerName, playercolor;
+    playerChar= oGameData.currentPlayer;
+    playerName= oGameData.currentPlayer===oGameData.playerOne?oGameData.nickNamePlayerOne:oGameData.nickNamePlayerTwo;
+    playercolor=oGameData.currentPlayer===oGameData.playerOne?oGameData.colorPlayerOne:oGameData.colorPlayerTwo;
+    document.querySelector(".jumbotron >h1").style.color= playercolor;
+    document.querySelector(".jumbotron >h1").textContent="aktuella spelare är "+playerName+"("+playerChar+")";
+}
 //pre: true
 //post: updates table to reflect gamefeild
 //uses gamefeild, playerone, playertwo, colorplayerone, colorplayertwo
@@ -62,144 +184,7 @@ oGameData.updateBoard=()=>{
         }
     });
 }
-//pre: body load
-//post: initlaizes ogamedata, hides gamearea
-//calls validateform, checkforgameover
-//catches does nothing
-document.body.onload=()=>{
-    oGameData.initGlobalObject();
-    document.querySelector('#game-area').classList.add("d-none");
-    document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
- document.querySelector('table').addEventListener("click",(event)=>{
-        try{
-            if(oGameData.gameField[Math.floor(Number(event.target.dataset.id)*0.34)][Number(event.target.dataset.id)%3]!==""){throw {}}
-            if(oGameData.checkForGameOver()!==0){throw {}}
-            oGameData.executeMove(event.target);
-        }catch(oError){}
-    });
-}
 
-//pre: true
-//post:sets ogamedata feilds, hides form, shows gamearea, clearss board, sets player, sets edvent listner click on table
-//calls updateBoard, math.random, updateplayer, execute move
-//uses nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo, playerone, playertwo
-//migth adjust see adendum 1
-oGameData.initiateGame=()=>{
-    document.querySelector('form')      .classList.add("d-none");
-    document.querySelector('#game-area').classList.remove("d-none");
-    document.querySelector('#game-area').focus();
-
-    document.querySelector("#errorMsg").textContent="";
-    oGameData.nickNamePlayerOne=document.querySelector("#nick1").value;
-    oGameData.nickNamePlayerTwo=document.querySelector("#nick2").value;
-    oGameData.colorPlayerOne=  document.querySelector("#color1").value;
-    oGameData.colorPlayerTwo=  document.querySelector("#color2").value;
-
-    document.querySelectorAll("td").forEach(element=>{
-        element.textContent="";
-        element.style.backgroundColor="#fff";
-    });
-    switch(Math.floor(Math.random()*2)){
-        case 0:
-            oGameData.currentPlayer=oGameData.playerOne;
-            break;
-        default: 
-            oGameData.currentPlayer=oGameData.playerTwo;
-            break;
-    }
-    oGameData.updatePlayer();
-    //oGameData.oppAi=new mything(playerTwo);
-    // document.querySelector('table').addEventListener("click",(event)=>{
-    //     try{
-    //         if(oGameData.gameField[Math.floor(Number(event.target.dataset.id)*0.34)][Number(event.target.dataset.id)%3]!==""){throw {}}
-    //         if(oGameData.checkForGameOver()!==0){throw {}}
-    //         oGameData.executeMove(event.target);
-    //     }catch(oError){}
-    // });
-}
-
-//pre: click newgame
-//post: initiaates game (conditional: passes checks)
-//calls initategame
-//checks name1/2 length > 5, color1/2 != white, color1/2 != black, color1 != color2
-//catches display error msg and focus on element
-oGameData.validateForm=()=>{
-        try{
-            if(document.querySelector("#nick1") .value.length<5){throw  {src: document.querySelector("#nick1"),msg: 'för kort, spelare 1'}}
-            if(document.querySelector("#nick2") .value.length<5){throw  {src: document.querySelector("#nick2"),msg: 'för kort, spelare 2'}}
-            if(document.querySelector("#color1").value==="#fff"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara vit, spelare 1'}}
-            if(document.querySelector("#color1").value==="#000"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara svart, spelare 1'}}
-            if(document.querySelector("#color2").value==="#fff"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara vit, spelare 2'}}
-            if(document.querySelector("#color2").value==="#000"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara svart, spelare 2'}}
-            if(document.querySelector("#nick1") .value===document.querySelector("#nick2") .value){throw  {src: document.querySelector("#nick2") ,msg: 'wtf sama namn'}}
-            if(document.querySelector("#color1").value===document.querySelector("#color2").value){throw  {src: document.querySelector("#color2"),msg: 'wtf same färg'}}
-            oGameData.initiateGame();
-            return true;
-        } catch(oError){
-            document.querySelector("#errorMsg").textContent=oError.msg;
-            oError.src.focus();
-            return false;
-        }
-}
-
-//pre: true
-//post:updates displayed player turn graphics
-//uses currentplayer, playerone, nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo
-oGameData.updatePlayer=()=>{
-    let playerChar, playerName, playercolor;
-    playerChar= oGameData.currentPlayer;
-    playerName= oGameData.currentPlayer===oGameData.playerOne?oGameData.nickNamePlayerOne:oGameData.nickNamePlayerTwo;
-    playercolor=oGameData.currentPlayer===oGameData.playerOne?oGameData.colorPlayerOne:oGameData.colorPlayerTwo;
-    document.querySelector(".jumbotron >h1").style.color= playercolor;
-    document.querySelector(".jumbotron >h1").textContent="aktuella spelare är "+playerName+"("+playerChar+")";
-}
-
-//pre: true
-//post:swaps current player
-//uses currentplayer, playerone, playertwo
-oGameData.swapPlayer=()=>{
-    switch(oGameData.currentPlayer){
-        case oGameData.playerOne:   oGameData.currentPlayer=oGameData.playerTwo;    break;
-        case oGameData.playerTwo:   oGameData.currentPlayer=oGameData.playerOne;    break;
-    }
-}
-
-//pre: click on game board
-//post:writes to table cell, updates color of table cell, swaps player, uppdates gui, checks gamestate to determin outcome
-//calls updateBoard, checkforgameover, swapplayer, updateplayer, initglobalobject
-//uses currentplayer, playerone, colorplayerone, colorplayertwo, nicknameplayerone, nicknameplayertwo
-// if the game has ended by any means it hides the game area, shows the form, removes the eventlsitner on table and reinitalizes the ogamedata object
-//uppdated check adendum 1
-oGameData.executeMove=(target)=>{
-    let targetRow=Math.floor((Number(target.dataset.id))*(2.9/8));
-    let targetCol=(Number(target.dataset.id))%3;
-    oGameData.gameField[targetRow][targetCol]=oGameData.currentPlayer;
-    switch(oGameData.checkForGameOver()){
-        case 0: oGameData.swapPlayer();  oGameData.updatePlayer();  oGameData.updateBoard();// oGameData.oppAi.turn(oGameData.gameField);
-            return;
-        case 1: 
-            document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerOne+": vinnare, Spela igen?";
-            break;
-        case 2:
-            document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerTwo+": vinnare, Spela igen?";
-            break;
-        case 3:
-            document.querySelector(".jumbotron >h1").style.color="black";
-            document.querySelector(".jumbotron >h1").textContent="oavgjort";
-            break;
-    }
-    document.querySelector('form')      .classList.remove("d-none");
-    document.querySelector('#game-area').classList.add("d-none");
-    oGameData.initGlobalObject();
-    /*
-    document.querySelector('table').removeEventListener("click",(event)=>{
-        try{
-            if(oGameData.gameField[Math.floor(Number(event.target.dataset.id)*0.34)][Number(event.target.dataset.id)%3]!==""){throw {}}
-            if(oGameData.checkForGameOver()!==0){throw {}}
-            oGameData.executeMove(event.target);
-        }catch(oError){}
-    });/**/
-    }
 
 /*  ADENDUM 1
 i am planning on moving the internal (code centered) board data to a 3X3 matrix instead of a 9 array
