@@ -1,16 +1,41 @@
 //import {mything} from 'algorythm.tictactoe2.mjs';
-//import {turn} from 'algorythm.tictactoe2.mjs';
+//import {turn} from 'algorythm.tictactoe2.mjs'; //could not make work without editing html
 "use strict";
 
 
 //pre: body load
-//post: initlaizes ogamedata, hides gamearea
+//post: initlaizes ogamedata, hides gamearea, creates div check box and label, sets values and attributes of new elementss, adds them to dom
 //calls validateform, checkforgameover
 //catches does nothing
 document.body.onload=()=>{
     oGameData.initGlobalObject();
     document.querySelector('#game-area').classList.add("d-none");
     document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
+    let timerdiv = document.createElement("div"); //here and down is new for assignment 4
+    let timercbx = document.createElement("input");
+    let timerlbl = document.createElement("label");
+    timercbx.setAttribute("type","checkbox");
+    timercbx.id="timer-cbx";
+    timercbx.name="options-cbx";
+    timerlbl.textContent="check this if u chud or smt";
+    timerlbl.id="timer-lbl";
+    timerdiv.id="timer-div";
+    timerdiv.appendChild(timercbx);
+    timerdiv.appendChild(timerlbl);// timerdiv.classList.add("col"); //for paridy,, though like the fact everything is in inine block messes it up, id like the lbl to be next to the cbx. not a hard fix but the current col class doesnt acoommidate this so for now its fine if its lacking the col class
+    document.querySelector("#div-in-form").insertBefore(timerdiv,document.querySelector("#div-with-a"));
+    // algorythm stuff down below
+    let oppaidiv = document.createElement("div");
+    let oppaicbx = document.createElement("input");
+    let oppailbl = document.createElement("label");
+    oppaicbx.setAttribute("type","checkbox");
+    oppaicbx.id="bot-cbx";
+    oppaicbx.name="options-cbx";
+    oppailbl.textContent="check to make player 2 a bot";
+    oppailbl.id="bot-lbl";
+    oppaidiv.id="bot-div";
+    oppaidiv.appendChild(oppaicbx);
+    oppaidiv.appendChild(oppailbl);// oppaidiv.classList.add("col");
+    document.querySelector("#div-in-form").insertBefore(oppaidiv,document.querySelector("#div-with-a"));
 }
 
 
@@ -26,7 +51,10 @@ oGameData.initGlobalObject=()=>{
     oGameData.colorPlayerTwo = "";
     oGameData.timerEnabled = false; 
     oGameData.timerId = null;
-    //oGameData.oppAi;
+    oGameData.intervalId = null;
+    oGameData.visualCountdown = 5;
+    oGameData.oppAiEnabled = false;
+    oGameData.oppAiId = null;
 }
 //pre: click newgame
 //post: initiaates game (conditional: passes checks)
@@ -37,10 +65,10 @@ oGameData.validateForm=()=>{
         try{
             if(document.querySelector("#nick1") .value.length<5){throw  {src: document.querySelector("#nick1"),msg: 'för kort, spelare 1'}}
             if(document.querySelector("#nick2") .value.length<5){throw  {src: document.querySelector("#nick2"),msg: 'för kort, spelare 2'}}
-            if(document.querySelector("#color1").value==="#fff"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara vit, spelare 1'}}
-            if(document.querySelector("#color1").value==="#000"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara svart, spelare 1'}}
-            if(document.querySelector("#color2").value==="#fff"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara vit, spelare 2'}}
-            if(document.querySelector("#color2").value==="#000"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara svart, spelare 2'}}
+            if(document.querySelector("#color1").value==="#ffffff"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara vit, spelare 1'}}
+            if(document.querySelector("#color1").value==="#000000"){throw  {src: document.querySelector("#color1"),msg: 'kan inte vara svart, spelare 1'}}
+            if(document.querySelector("#color2").value==="#ffffff"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara vit, spelare 2'}}
+            if(document.querySelector("#color2").value==="#000000"){throw  {src: document.querySelector("#color2"),msg: 'kan inte vara svart, spelare 2'}}
             if(document.querySelector("#nick1") .value===document.querySelector("#nick2") .value){throw  {src: document.querySelector("#nick2") ,msg: 'wtf sama namn'}}
             if(document.querySelector("#color1").value===document.querySelector("#color2").value){throw  {src: document.querySelector("#color2"),msg: 'wtf same färg'}}
             oGameData.initiateGame();
@@ -54,7 +82,7 @@ oGameData.validateForm=()=>{
 //pre: true
 //post:sets ogamedata feilds, hides form, shows gamearea, clearss board, sets player, sets edvent listner click on table
 //calls updateBoard, math.random, updateplayer, execute move
-//uses nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo, playerone, playertwo
+//uses nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo, playerone, playertwo, timerenabled
 //migth adjust see adendum 1
 oGameData.initiateGame=()=>{
     oGameData.initGlobalObject();
@@ -67,22 +95,32 @@ oGameData.initiateGame=()=>{
     oGameData.nickNamePlayerTwo=document.querySelector("#nick2").value;
     oGameData.colorPlayerOne=  document.querySelector("#color1").value;
     oGameData.colorPlayerTwo=  document.querySelector("#color2").value;
-
-    switch(Math.floor(Math.random()*2)){
-        case 0:
-            oGameData.currentPlayer=oGameData.playerOne;
-            break;
-            default: 
-            oGameData.currentPlayer=oGameData.playerTwo;
-            break;
+    oGameData.timerEnabled= document.querySelector("#timer-cbx").checked;
+    oGameData.oppAiEnabled=   document.querySelector("#bot-cbx").checked;
+    
+    if(oGameData.timerEnabled){
+        document.querySelector("#errorMsg").textContent= oGameData.visualCountdown;
     }
+    if(oGameData.oppAiEnabled){
+        oGameData.oppAiId=new mything(oGameData.playerTwo);
+        oGameData.currentPlayer=oGameData.playerOne; 
+    }
+    else{
+        switch(Math.floor(Math.random()*2)){
+            case 0:
+                oGameData.currentPlayer=oGameData.playerOne;
+                break;
+                default: 
+                oGameData.currentPlayer=oGameData.playerTwo;
+                break;
+            }
+        }
     oGameData.updatePlayer();
     oGameData.updateBoard();
     document.querySelector("table[class]").addEventListener("click",oGameData.clickTableEvent);
-    //oGameData.oppAi=new mything(playerTwo);
 }
-//pre: n/a
-//post: n/a
+//pre: click on element
+//post: execute move if conditions met
 //this function is used to add and remove th event listner from the table
 oGameData.clickTableEvent=(evt)=>{ //inspo with the "evt" syntax from here but i adjusted it a lot, main inspo was the no params in the func call and then one in this one https://stackoverflow.com/questions/256754/how-to-pass-arguments-to-addeventlistener-listener-function
         try{
@@ -98,16 +136,24 @@ oGameData.clickTableEvent=(evt)=>{ //inspo with the "evt" syntax from here but i
 // if the game has ended by any means it hides the game area, shows the form, removes the eventlsitner on table and reinitalizes the ogamedata object
 //uppdated check adendum 1
 oGameData.executeMove=(target)=>{
-    let targetRow=Math.floor((Number(target.dataset.id))*(2.9/8));
-    let targetCol=(Number(target.dataset.id))%3;
+    let targetRow=Math.floor(((target.dataset.id))*(2.9/8));
+    let targetCol=((target.dataset.id))%3;
     oGameData.gameField[targetRow][targetCol]=oGameData.currentPlayer;
+
+    if(oGameData.oppAiEnabled && oGameData.checkForGameOver()===0){
+        oGameData.oppAiId.turn(oGameData.gameField);
+    }
     switch(oGameData.checkForGameOver()){
-        case 0: oGameData.swapPlayer();  oGameData.updatePlayer();  oGameData.updateBoard();// oGameData.oppAi.turn(oGameData.gameField);
+        case 0: 
+        oGameData.swapPlayer();  
+        oGameData.updatePlayer();  
+        oGameData.updateBoard();
             return;
         case 1: 
             document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerOne+": vinnare, Spela igen?";
             break;
         case 2:
+            if(oGameData.oppAiEnabled){ document.querySelector(".jumbotron >h1").style.color=oGameData.colorPlayerTwo;}
             document.querySelector(".jumbotron >h1").textContent=oGameData.nickNamePlayerTwo+": vinnare, Spela igen?";
             break;
         case 3:
@@ -115,6 +161,11 @@ oGameData.executeMove=(target)=>{
             document.querySelector(".jumbotron >h1").textContent="oavgjort";
             break;
     }// all below only execute if the game has ended
+    clearTimeout(oGameData.timerId);
+    clearInterval(oGameData.intervalId);
+    oGameData.timerId=null;
+    oGameData.intervalIdId=null;
+    document.querySelector("#errorMsg").textContent= "";
     document.querySelector('form')      .classList.remove("d-none");
     document.querySelector('#game-area').classList.add   ("d-none");
     document.querySelector("table[class]").removeEventListener("click",oGameData.clickTableEvent);
@@ -125,23 +176,24 @@ oGameData.executeMove=(target)=>{
 //calls on checkrow checkcol checkdiag and checkinprogress, uses playerone and playertwo
 //updated check adendum 1
 oGameData.checkForGameOver=()=>{
+    oGameData.ensureMatrix(); //in case of "malicious" user interference like the autochecker assigning a value of the wrong format to gamefeild
     let c=oGameData.playerOne;
-    for(let i=0;i<2;i++){
+    for(let i=1;i<3;i++){ //changed from "0 to 2" to "1 to 3" so it indexes at 1 instead of 0, otherwise its the same. this simplifies the return at the cost of sligthly obscuring the loop duration, itll still only play twice tho its the same as before.
         for(let j=0;j<3;j++){
             if(oGameData.gameField[j][  0  ]!==c){continue;}
             if(oGameData.gameField[j][  1  ]!==c){continue;}
             if(oGameData.gameField[j][  2  ]!==c){continue;}
-            return i+1;}
+            return i;}
         for(let j=0;j<3;j++){
             if(oGameData.gameField[0][  j  ]!==c){continue;}
             if(oGameData.gameField[1][  j  ]!==c){continue;}
             if(oGameData.gameField[2][  j  ]!==c){continue;}
-            return i+1;}
+            return i;}
         for(let j=0;j<2;j++){
             if(oGameData.gameField[0][0+j*2]!==c){continue;}
             if(oGameData.gameField[1][  1  ]!==c){continue;}
             if(oGameData.gameField[2][2-j*2]!==c){continue;}
-            return i+1;
+            return i;
         }c=oGameData.playerTwo;}
     for(let i=0;i<3;i++){
         for(let j=0;j<3;j++){
@@ -154,13 +206,14 @@ oGameData.checkForGameOver=()=>{
 //post:swaps current player
 //uses currentplayer, playerone, playertwo
 oGameData.swapPlayer=()=>{
+    if(oGameData.oppAiEnabled){return;}
     switch(oGameData.currentPlayer){
         case oGameData.playerOne:   oGameData.currentPlayer=oGameData.playerTwo;    break;
         case oGameData.playerTwo:   oGameData.currentPlayer=oGameData.playerOne;    break;
     }
 }
 //pre: true
-//post:updates displayed player turn graphics
+//post:updates displayed player turn graphics, handles timer stuff if enabled
 //uses currentplayer, playerone, nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo
 oGameData.updatePlayer=()=>{
     let playerChar, playerName, playercolor;
@@ -168,7 +221,22 @@ oGameData.updatePlayer=()=>{
     playerName= oGameData.currentPlayer===oGameData.playerOne?oGameData.nickNamePlayerOne:oGameData.nickNamePlayerTwo;
     playercolor=oGameData.currentPlayer===oGameData.playerOne?oGameData.colorPlayerOne:oGameData.colorPlayerTwo;
     document.querySelector(".jumbotron >h1").style.color= playercolor;
-    document.querySelector(".jumbotron >h1").textContent="aktuella spelare är "+playerName+"("+playerChar+")";
+    document.querySelector(".jumbotron >h1").textContent="aktuella spelare är "+playerName+"  ("+playerChar+")";
+    
+    if (!oGameData.timerEnabled){ return;}
+    oGameData.visualCountdown=5;
+    document.querySelector("#errorMsg").textContent= oGameData.visualCountdown;
+    clearTimeout(oGameData.timerId);
+    clearInterval(oGameData.intervalId);
+    oGameData.timerId=setTimeout(()=>{
+        if(oGameData.oppAiEnabled){oGameData.instantWin(oGameData.playerTwo);return;}
+        oGameData.swapPlayer();
+        oGameData.updatePlayer();
+        }, 5000);//5000 const and magic nnumber atm, its 5 second as described in the requirements
+    oGameData.intervalId=setInterval(() => {
+        oGameData.visualCountdown--;
+        document.querySelector("#errorMsg").textContent= oGameData.visualCountdown;
+        }, 1000);//1000 const rep 1 sec, unlikely to be changed but if u do know that itll remove one sec from the visula timer for whichever interval u change it to, likely not what you want to do
 }
 //pre: true
 //post: updates table to reflect gamefeild
@@ -183,6 +251,22 @@ oGameData.updateBoard=()=>{
             default: element.style.backgroundColor="#fff"; break;
         }
     });
+}
+//pre: player==playerone||player==playertwo && checkforgameover==0
+//post: player instantly wins
+oGameData.instantWin=(player)=>{
+    oGameData.gameField=[[player,player,player],[player,player,player],[player,player,player]];
+    oGameData.executeMove(document.querySelector("td[data-id]"));
+}
+//pre: true
+//post: forces gamefield into being an array (retains values)
+// this is made cuz the first lab was entierly orieneted around using a 9 lenght array for the game feild, overwwriting my matrix and generally being a thorn
+oGameData.ensureMatrix=()=>{
+    if(Array.isArray(oGameData.gameField[0])){return;}
+    let inp=structuredClone(oGameData.gameField);
+    oGameData.gameField=   [[inp[0]??"",inp[1]??"",inp[2]??""],
+                            [inp[3]??"",inp[4]??"",inp[5]??""],
+                            [inp[6]??"",inp[7]??"",inp[8]??""]];
 }
 
 
@@ -201,7 +285,7 @@ the suggested play before the manipulations, and then i set that position in the
 alterations needed:
  [X]  change the variable ogamedata.gamefeild to a matrix
  [x]  change checkforgameover, (potential sub funcitons) to acommedate matrix
- [/]  change initategame, to make a new object of the ai 
+ [X]  change initategame, to make a new object of the ai 
  [X]  change executeMove, to set gamefield and call on updateboard rather than access the board directly
  [X]  add updateboard, inversse of fetch changing the displayed board to fit the internal matrix rather than the other way around
  [X]  remove fetch method to set gamefeild correctly
@@ -233,3 +317,56 @@ alterations needed:
  * styling of comment for more blog like explinations maybe, ive been pretty inconsecvential with
  * it in the past and im not sure it truly matters that much but might as well yk would look neat
 */
+
+/** my algorythm
+ * well whatever doesnt seem to be a way to import a file into here unless i change the html script sorce to module (other ways too but that seems to be the best one)
+ * so i throw in the towl at this one for now im just gonna paste the darn code here myself, its not too long since i made all nice like and stuff from scratch myself
+ * 
+ * okay there here it is isnt it beautiful! i made this in a friednly comp with my friend to see who could make the neatest ai without looking up any solutions 
+ * everything is documented on my github : https://github.com/doinguss/tic-tac-toe-algorythm
+ * ive also uppploaded this courses progress (in a diffrent repo ofc )
+ * 
+ * anyway sry if the code commenting standards arent uppheeld in this part, i figured this is beyond the bounds of the assignment anyways so
+ */
+class mything{
+    constructor(playchar){
+        this.p=playchar;
+    }
+    trsp(b) {let o=[["","",""],["","",""],["","",""]];for(let i=0;i<3;i++){for(let j=0;j<3;j++){                     o[i][j]=b[j][i];                       }}return o;}//mirrors on diagonal/ transposes the matrix
+    rev (b) {let o=[["","",""],["","",""],["","",""]];for(let i=0;i<3;i++){for(let j=0;j<3;j++){                    o[i][j]=b[i][2-j];                      }}return o;}//reverses the order in each row
+    mx2s(b) {let o=""                                ;for(let i=0;i<3;i++){for(let j=0;j<3;j++){if(b[i][j]===""){o+='.';}else{o+=(b[i][j]==this.p?'x':'o');}}}return o;}//generates a 1d string from 2d matrix(3x3) replaces empty with '.'
+    turn(b) {//the thing getting called at each turn, checks if boardstate is in lookuptable otherwise manipulates the matrix and looks again untill it finds a match
+        let o=structuredClone(b),u=[[0,1,2],[3,4,5],[6,7,8]];// u= index matrix, is manipulated the same way the data matrix is but retains the original position of each position in form of value
+        let i=this.lookup(o),err=15;
+        while(i===-1){
+            o=this.trsp   (o);
+            u=this.trsp   (u);
+            i=this.lookup (o);
+            if(i!==-1){break;}
+            o=this.rev    (o);
+            u=this.rev    (u);
+            i=this.lookup (o);
+            if(--err===0){/*console.warn(this.mx2s(o));*/return;}
+        }
+        b[Math.floor(u[Math.floor(i*0.3625)][i%3]*0.3625)][u[Math.floor(i*0.3625)][i%3]%3]=this.p; //the const is 2.9/8 and im taking the floor of that so that itll increase by 1 every third exluding the final one so its 0 0 0 1 1 1 2 2 2 for all the numbers 0 trhough 8
+    }
+    lookup(o) {//lookup table for compressed gamestates, returns optimal* move (*i dont know its optimal its the best i can do tho xd)
+        const table={
+            ".........": 0, ".oo.x....": 0, ".o..xo...": 0, "....o....": 0, "x..o.....": 1, "x...o....": 1, "x.....o..": 1, "x.x.o..o.": 1, "x.x..o.o.": 1,
+            "x.xo....o": 1, "x.x.o...o": 1, "x.x..o..o": 1, "x.x...o.o": 1, "x.x....oo": 1, "o.o.x....": 1, "o.oox.x..": 1, "o...xo...": 1, "o...x...o": 1,
+            "x.oooxxo.": 1, "x.oooxx.o": 1, "xx.oo....": 2, "xx.o.o...": 2, "xx.o..o..": 2, "xx.o...o.": 2, "xx.o....o": 2, "xx..oo...": 2, "xx..o.o..": 2,
+            "xx..o..o.": 2, "xx..o...o": 2, "x..oxoxo.": 2, "x..oxox.o": 2, "xx...oo..": 2, "xx....oo.": 2, "xx....o.o": 2, "x......o.": 2, "x.......o": 2,
+            "oo.ox.x..": 2, "o..oxox..": 2, "o..ox.xo.": 2, "o..ox.x.o": 2, "ox..xo.o.": 2, "ox.ox.xoo": 2, "ox..xoxoo": 2, "xo..xo..o": 2, "xo.ooxox.": 2,
+            "xo.oox.xo": 2, "xo.xooox.": 2, "xo..o.ox.": 2, "xo.xo.oxo": 2, "xxo.oox..": 3, "xxo.o.xo.": 3, "xxo.o.x.o": 3, "xox.o.x.o": 3, "oxo.x..o.": 3,
+            "xoo.xxo.o": 3, "xoo.xx.oo": 3, "xoo.ooxx.": 3, "xoo.o.xxo": 3, "xo..oo.x.": 3, "xo..o..xo": 3, "xoo.o.x..": 3, "x.o.oox..": 3, "x.o.o.xo.": 3,
+            "x.o.o.x.o": 3, "xo.x..o..": 4, "x.ox..o..": 4, "x..o.ox..": 4, "xoxo..x.o": 4, "xox..ox.o": 4, "xox...xoo": 4, "o........": 4, ".o.......": 4,
+            "xo.xx.o.o": 5, "x.oxx.o.o": 5, "xxooo.x..": 5, "oxoxx.oo.": 5, "oxoxx..oo": 5, "oxoox.xo.": 5, "oxo.x.xoo": 5, "xo.oo..x.": 5, "xoxoo.ox.": 5,
+            "x.ooo.x..": 5, "xxo.o....": 6, "xox.....o": 6, "oxxoxo.o.": 6, "oxx.xo.oo": 6, "ox..x..oo": 6, "xoxoxo..o": 6, "xox.xo.oo": 6, "xoo.o..x.": 6,
+            "xooxoo.x.": 6, "xo.xoo.xo": 6, "xooxo..xo": 6, "x.o.o....": 6, "xxooxo...": 7, "xxoox.o..": 7, "xxoooxx.o": 7, "oxoox....": 7, "oxo.x.o..": 7,
+            "ox.oxo...": 7, "ox..xoo..": 7, "ox..xo..o": 7, "ox.ox...o": 7, "ox..x.o.o": 7, "xox.xoo.o": 7, "xo..o....": 7, "xo.xxoo..": 8, "x.oxxoo..": 8,
+            "x.oxx.oo.": 8, "xxoooxxo.": 8, "oxoxxo.o.": 8, "oxx.xooo.": 8, "xo.oxo...": 8, "xo..xoo..": 8, "xo..xo.o.": 8, "xoooo.xx.": 8, ".o..o.x..": 7,
+            "...oxo...": 0, "x..xoo.o.": 6, "x.ooxo...": 8, "x..xooo..": 2, "xx.oo..o.": 2, "xx..o.oo.": 2, "x...o...o": 2, "xx..o..oo": 2, "xo..x..oo": 6,
+            "x.xoxoo.o": 1, "xxo.ooxo.": 3, "xxooo.xo.": 5, "xo..xoxoo": 3}
+        return table[this.mx2s(o)]==null?   -1:table[this.mx2s(o)];
+        }
+    }
