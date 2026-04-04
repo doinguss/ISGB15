@@ -13,28 +13,24 @@ document.body.onload=()=>{
     document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
     let timerdiv = document.createElement("div"); //here and down is new for assignment 4
     let timercbx = document.createElement("input");
-    let timerlbl = document.createElement("label");
+    let timerlbl = document.createTextNode("5 sec turn timer");
     timercbx.setAttribute("type","checkbox");
     timercbx.id="timer-cbx";
-    timercbx.name="options-cbx";
-    timerlbl.textContent="check this if u chud or smt";
-    timerlbl.id="timer-lbl";
     timerdiv.id="timer-div";
     timerdiv.appendChild(timercbx);
-    timerdiv.appendChild(timerlbl);// timerdiv.classList.add("col"); //for paridy,, though like the fact everything is in inine block messes it up, id like the lbl to be next to the cbx. not a hard fix but the current col class doesnt acoommidate this so for now its fine if its lacking the col class
+    timerdiv.appendChild(timerlbl);
+    timerdiv.classList.add("inline");
     document.querySelector("#div-in-form").insertBefore(timerdiv,document.querySelector("#div-with-a"));
     // algorythm stuff down below
     let oppaidiv = document.createElement("div");
     let oppaicbx = document.createElement("input");
-    let oppailbl = document.createElement("label");
+    let oppailbl = document.createTextNode("player 2 bot");
     oppaicbx.setAttribute("type","checkbox");
     oppaicbx.id="bot-cbx";
-    oppaicbx.name="options-cbx";
-    oppailbl.textContent="check to make player 2 a bot";
-    oppailbl.id="bot-lbl";
     oppaidiv.id="bot-div";
     oppaidiv.appendChild(oppaicbx);
-    oppaidiv.appendChild(oppailbl);// oppaidiv.classList.add("col");
+    oppaidiv.appendChild(oppailbl);
+    oppaidiv.classList.add("inline");
     document.querySelector("#div-in-form").insertBefore(oppaidiv,document.querySelector("#div-with-a"));
 }
 
@@ -86,11 +82,11 @@ oGameData.validateForm=()=>{
 //migth adjust see adendum 1
 oGameData.initiateGame=()=>{
     oGameData.initGlobalObject();
-    document.querySelector('form')      .classList.add("d-none");
+    document.querySelector('form')      .classList.add("d-none");       //display block
     document.querySelector('#game-area').classList.remove("d-none");
     document.querySelector('#game-area').focus();
 
-    document.querySelector("#errorMsg").textContent="";
+    document.querySelector("#errorMsg").textContent="";                  //gathering data block
     oGameData.nickNamePlayerOne=document.querySelector("#nick1").value;
     oGameData.nickNamePlayerTwo=document.querySelector("#nick2").value;
     oGameData.colorPlayerOne=  document.querySelector("#color1").value;
@@ -98,14 +94,16 @@ oGameData.initiateGame=()=>{
     oGameData.timerEnabled= document.querySelector("#timer-cbx").checked;
     oGameData.oppAiEnabled=   document.querySelector("#bot-cbx").checked;
     
-    if(oGameData.timerEnabled){
+    if(oGameData.timerEnabled){                                             //timerspecific block
         document.querySelector("#errorMsg").textContent= oGameData.visualCountdown;
     }
-    if(oGameData.oppAiEnabled){
+
+    if(oGameData.oppAiEnabled){                                             //algorythm opponent specific block
         oGameData.oppAiId=new mything(oGameData.playerTwo);
         oGameData.currentPlayer=oGameData.playerOne; 
     }
-    else{
+
+    else{                                                                   //standard player randomizer block
         switch(Math.floor(Math.random()*2)){
             case 0:
                 oGameData.currentPlayer=oGameData.playerOne;
@@ -115,7 +113,8 @@ oGameData.initiateGame=()=>{
                 break;
             }
         }
-    oGameData.updatePlayer();
+
+    oGameData.updatePlayer();                                               //readys board
     oGameData.updateBoard();
     document.querySelector("table[class]").addEventListener("click",oGameData.clickTableEvent);
 }
@@ -291,8 +290,7 @@ alterations needed:
  [X]  remove fetch method to set gamefeild correctly
 */
 
-/** 
- * update
+/** update
  * importing things (like the ai atm) seems tricky and convalouted to do
  * i can look into it further in the future but for now ill leave it as is,
  * the only thing to fix is basically the topmost lines with import and depending
@@ -346,7 +344,7 @@ class mything{
             o=this.rev    (o);
             u=this.rev    (u);
             i=this.lookup (o);
-            if(--err===0){/*console.warn(this.mx2s(o));*/return;}
+            if(--err===0){/**/console.warn(this.mx2s(o));/**/return;}
         }
         b[Math.floor(u[Math.floor(i*0.3625)][i%3]*0.3625)][u[Math.floor(i*0.3625)][i%3]%3]=this.p; //the const is 2.9/8 and im taking the floor of that so that itll increase by 1 every third exluding the final one so its 0 0 0 1 1 1 2 2 2 for all the numbers 0 trhough 8
     }
@@ -367,6 +365,6 @@ class mything{
             "x.oxx.oo.": 8, "xxoooxxo.": 8, "oxoxxo.o.": 8, "oxx.xooo.": 8, "xo.oxo...": 8, "xo..xoo..": 8, "xo..xo.o.": 8, "xoooo.xx.": 8, ".o..o.x..": 7,
             "...oxo...": 0, "x..xoo.o.": 6, "x.ooxo...": 8, "x..xooo..": 2, "xx.oo..o.": 2, "xx..o.oo.": 2, "x...o...o": 2, "xx..o..oo": 2, "xo..x..oo": 6,
             "x.xoxoo.o": 1, "xxo.ooxo.": 3, "xxooo.xo.": 5, "xo..xoxoo": 3}
-        return table[this.mx2s(o)]==null?   -1:table[this.mx2s(o)];
-        }
+        return table[this.mx2s(o)]??-1;
+        }//ox..xo.o. -> 2 is a loosing move and is the only way to win against this algorythm acounting for its rotations and symetreis. to fix it change it to 6, remove oxx.xooo. ->8 or adjust it to become oxo.xoxo.->8 ,oxxoxo.o. oxx.xo.oo (->6) have now become unreachable and should be replaced by ox..xoxoo ox.oxoxo.(->2) although make sure to test this with the checker i made before hand so that these states are dupes, and also check the test enviroment if these would leed to any dead branches both available on my github (file names setval.js, test.algorythm2.html respectivly) link: https://github.com/doinguss/tic-tac-toe-algorythm  
     }
