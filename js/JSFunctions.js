@@ -5,13 +5,14 @@
 
 //pre: body load
 //post: initlaizes ogamedata, hides gamearea, creates div check box and label, sets values and attributes of new elementss, adds them to dom
-//calls validateform, checkforgameover
+//calls validateform, initglobalobject
 //catches does nothing
-document.body.onload=()=>{
+//document.body.onload=()=>{
+addEventListener("load",()=>{
     oGameData.initGlobalObject();
     document.querySelector('#game-area').classList.add("d-none");
     document.querySelector('#newGame').addEventListener("click",()=>oGameData.validateForm());
-    let timerdiv = document.createElement("div"); //here and down is new for assignment 4
+    let timerdiv = document.createElement("div"); //here and down is new for assignment 4, rn adding checkbox + label for the timer
     let timercbx = document.createElement("input");
     let timerlbl = document.createTextNode("5 sec turn timer");
     timercbx.setAttribute("type","checkbox");
@@ -22,7 +23,7 @@ document.body.onload=()=>{
     timerdiv.classList.add("inline");
     document.querySelector("#div-in-form").insertBefore(timerdiv,document.querySelector("#div-with-a"));
     // algorythm stuff down below
-    let oppaidiv = document.createElement("div");
+    let oppaidiv = document.createElement("div");//adding checkbox + label for the ai/algorythm opponent (basically the same as a bove)
     let oppaicbx = document.createElement("input");
     let oppailbl = document.createTextNode("player 2 bot");
     oppaicbx.setAttribute("type","checkbox");
@@ -33,6 +34,7 @@ document.body.onload=()=>{
     oppaidiv.classList.add("inline");
     document.querySelector("#div-in-form").insertBefore(oppaidiv,document.querySelector("#div-with-a"));
 }
+);
 
 
 let oGameData = {};
@@ -135,14 +137,14 @@ oGameData.clickTableEvent=(evt)=>{ //inspo with the "evt" syntax from here but i
 // if the game has ended by any means it hides the game area, shows the form, removes the eventlsitner on table and reinitalizes the ogamedata object
 //uppdated check adendum 1
 oGameData.executeMove=(target)=>{
-    let targetRow=Math.floor(((target.dataset.id))*(2.9/8));
+    let targetRow=Math.floor(((target.dataset.id))*(2.9/8));    //converts nmber 0-8 to matrix positions [0-2][0-2]
     let targetCol=((target.dataset.id))%3;
-    oGameData.gameField[targetRow][targetCol]=oGameData.currentPlayer;
+    oGameData.gameField[targetRow][targetCol]=oGameData.currentPlayer;  //adds current player char to specified position in matrix (not the visual board)
 
-    if(oGameData.oppAiEnabled && oGameData.checkForGameOver()===0){
+    if(oGameData.oppAiEnabled && oGameData.checkForGameOver()===0){     //ai/ allgorythmthings self explanitory
         oGameData.oppAiId.turn(oGameData.gameField);
     }
-    switch(oGameData.checkForGameOver()){
+    switch(oGameData.checkForGameOver()){                           //gamestate check
         case 0: 
         oGameData.swapPlayer();  
         oGameData.updatePlayer();  
@@ -159,11 +161,12 @@ oGameData.executeMove=(target)=>{
             document.querySelector(".jumbotron >h1").style.color="black";
             document.querySelector(".jumbotron >h1").textContent="oavgjort";
             break;
-    }// all below only execute if the game has ended
+    }           // all below only execute if the game has ended
     clearTimeout(oGameData.timerId);
     clearInterval(oGameData.intervalId);
     oGameData.timerId=null;
     oGameData.intervalIdId=null;
+    oGameData.initGlobalObject();
     document.querySelector("#errorMsg").textContent= "";
     document.querySelector('form')      .classList.remove("d-none");
     document.querySelector('#game-area').classList.add   ("d-none");
@@ -179,33 +182,33 @@ oGameData.checkForGameOver=()=>{
     let c=oGameData.playerOne;
     for(let i=1;i<3;i++){ //changed from "0 to 2" to "1 to 3" so it indexes at 1 instead of 0, otherwise its the same. this simplifies the return at the cost of sligthly obscuring the loop duration, itll still only play twice tho its the same as before.
         for(let j=0;j<3;j++){
-            if(oGameData.gameField[j][  0  ]!==c){continue;}
+            if(oGameData.gameField[j][  0  ]!==c){continue;}    //checks each row
             if(oGameData.gameField[j][  1  ]!==c){continue;}
             if(oGameData.gameField[j][  2  ]!==c){continue;}
             return i;}
         for(let j=0;j<3;j++){
-            if(oGameData.gameField[0][  j  ]!==c){continue;}
+            if(oGameData.gameField[0][  j  ]!==c){continue;}    //checks each collumn
             if(oGameData.gameField[1][  j  ]!==c){continue;}
             if(oGameData.gameField[2][  j  ]!==c){continue;}
             return i;}
         for(let j=0;j<2;j++){
-            if(oGameData.gameField[0][0+j*2]!==c){continue;}
+            if(oGameData.gameField[0][0+j*2]!==c){continue;}    //checks the two diagonals
             if(oGameData.gameField[1][  1  ]!==c){continue;}
             if(oGameData.gameField[2][2-j*2]!==c){continue;}
             return i;
-        }c=oGameData.playerTwo;}
+        }c=oGameData.playerTwo;}        //changes to playr two and tries all above again (computationally very lenient due to the continue and lack of math)
     for(let i=0;i<3;i++){
         for(let j=0;j<3;j++){
-            if(oGameData.gameField[i][  j  ]===""){return 0;}
+            if(oGameData.gameField[i][  j  ]===""){return 0;}   //checks if in progress
         }
     }
-    return 3;
+    return 3;                       //if all else fails, tie
 }
 //pre: true
 //post:swaps current player
 //uses currentplayer, playerone, playertwo
 oGameData.swapPlayer=()=>{
-    if(oGameData.oppAiEnabled){return;}
+    if(oGameData.oppAiEnabled){return;}     //when playing with the ai u never swap the current player
     switch(oGameData.currentPlayer){
         case oGameData.playerOne:   oGameData.currentPlayer=oGameData.playerTwo;    break;
         case oGameData.playerTwo:   oGameData.currentPlayer=oGameData.playerOne;    break;
@@ -215,15 +218,15 @@ oGameData.swapPlayer=()=>{
 //post:updates displayed player turn graphics, handles timer stuff if enabled
 //uses currentplayer, playerone, nicknameplayerone, nicknameplayertwo, colorplayerone, colorplayertwo
 oGameData.updatePlayer=()=>{
-    let playerChar, playerName, playercolor;
+    let playerChar, playerName, playercolor;        //this block is jjust for the visula indication of whos turn it is
     playerChar= oGameData.currentPlayer;
     playerName= oGameData.currentPlayer===oGameData.playerOne?oGameData.nickNamePlayerOne:oGameData.nickNamePlayerTwo;
     playercolor=oGameData.currentPlayer===oGameData.playerOne?oGameData.colorPlayerOne:oGameData.colorPlayerTwo;
     document.querySelector(".jumbotron >h1").style.color= playercolor;
     document.querySelector(".jumbotron >h1").textContent="aktuella spelare är "+playerName+"  ("+playerChar+")";
     
-    if (!oGameData.timerEnabled){ return;}
-    oGameData.visualCountdown=5;
+    if (!oGameData.timerEnabled){ return;}  //early return
+    oGameData.visualCountdown=5;            //this block is for countdowns, i clear both interva and timeout and then reset them to keep the timekeeping constant
     document.querySelector("#errorMsg").textContent= oGameData.visualCountdown;
     clearTimeout(oGameData.timerId);
     clearInterval(oGameData.intervalId);
@@ -242,7 +245,7 @@ oGameData.updatePlayer=()=>{
 //uses gamefeild, playerone, playertwo, colorplayerone, colorplayertwo
 //chekc adendum 1
 oGameData.updateBoard=()=>{
-    document.querySelectorAll("td[data-id]").forEach((element,index)=>{
+    document.querySelectorAll("td[data-id]").forEach((element,index)=>{             //takess the element and its index of each td and fills it with the corresponding matrix value and color
         element.textContent=oGameData.gameField[Math.floor(index*0.34)][index%3];
         switch(oGameData.gameField[Math.floor(index*0.34)][index%3]){
             case oGameData.playerOne: element.style.backgroundColor=oGameData.colorPlayerOne; break;
@@ -254,18 +257,18 @@ oGameData.updateBoard=()=>{
 //pre: player==playerone||player==playertwo && checkforgameover==0
 //post: player instantly wins
 oGameData.instantWin=(player)=>{
-    oGameData.gameField=[[player,player,player],[player,player,player],[player,player,player]];
+    oGameData.gameField=[[player,player,player],[player,player,player],[player,player,player]]; //just like fills the entire board with the specified player and then play once to instantly win no matter what
     oGameData.executeMove(document.querySelector("td[data-id]"));
 }
 //pre: true
 //post: forces gamefield into being an array (retains values)
 // this is made cuz the first lab was entierly orieneted around using a 9 lenght array for the game feild, overwwriting my matrix and generally being a thorn
 oGameData.ensureMatrix=()=>{
-    if(Array.isArray(oGameData.gameField[0])){return;}
-    let inp=structuredClone(oGameData.gameField);
+    if(Array.isArray(oGameData.gameField[0])){return;}  //normal case, early return
+    let inp=structuredClone(oGameData.gameField);       //clone
     oGameData.gameField=   [[inp[0]??"",inp[1]??"",inp[2]??""],
                             [inp[3]??"",inp[4]??"",inp[5]??""],
-                            [inp[6]??"",inp[7]??"",inp[8]??""]];
+                            [inp[6]??"",inp[7]??"",inp[8]??""]];    //new matrix stripping the value of the clone and assigning it to gamefeild, if any are null itll be replaced with ""
 }
 
 
